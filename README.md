@@ -9,9 +9,17 @@ Binary Stream to transfer binary between a server and a client.
 
 ## Getting started
 
-```dart
+```yaml
 dependencies:
   binary_stream: ^1.0.0
+```
+
+### Solving packages conflict
+Add this code end of pubspec.yaml.
+```yaml
+dependency_overrides:
+  collection: your package version
+  vector_math: your package version
 ```
 
 ## Usage
