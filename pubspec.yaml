@@ -1,0 +1,15 @@
+name: binary_stream
+description: Binary Stream to transfer binary between a server and a client.
+version: 1.0.0
+repository: https://github.com/gtgalone/binary_stream
+
+environment:
+  sdk: '>=2.19.6 <3.0.0'
+
+dependencies:
+  collection: ^1.17.1
+  vector_math: ^2.1.4
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
