@@ -4,7 +4,7 @@ version: 1.0.0
 repository: https://github.com/gtgalone/binary_stream
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'
+  sdk: '>=2.19.6 <4.0.0'
 
 dependencies:
   collection: ^1.17.1
