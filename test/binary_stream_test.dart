@@ -6,11 +6,11 @@ void main() {
     final binaryStream = BinaryStream();
 
     setUp(() {
-      binaryStream.writeInt(1);
+      binaryStream.writeInt32(1);
     });
 
     test('First Test', () {
-      expect(binaryStream.readInt(), 1);
+      expect(binaryStream.readInt32(), 1);
     });
   });
 }

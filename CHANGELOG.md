@@ -9,3 +9,7 @@
 ## 1.0.2
 
 - Change to vector64.
+
+## 1.0.3
+
+- Change name of functions.

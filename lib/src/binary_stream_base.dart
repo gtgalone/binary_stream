@@ -41,30 +41,16 @@ class BinaryStream {
     writeIndex += buf.lengthInBytes;
   }
 
-  /// Reads an unsigned byte (0 to 255).
-  /// @returns [int]
-  int readByte() {
-    doReadAssertions(1);
-    return buffer.asByteData().getUint8(readIndex++);
-  }
-
-  /// Writes an unsigned byte (0 to 255).
-  /// @param [int] v
-  void writeByte(int v) {
-    writeIndex++;
-    binary.add(v & 0xff);
-  }
-
   /// Reads a signed byte (-128 to 127).
   /// @returns [int]
-  int readSignedByte() {
+  int readInt8() {
     doReadAssertions(1);
     return buffer.asByteData().getInt8(readIndex++);
   }
 
   /// Writes a signed byte (-128 to 127).
   /// @param [int] v
-  void writeSignedByte(int v) {
+  void writeInt8(int v) {
     var v2 = v;
     if (v2 < 0) {
       v2 = 0xff + v2 + 1;
@@ -73,157 +59,165 @@ class BinaryStream {
     binary.add(v2 & 0xff);
   }
 
+  /// Reads an unsigned byte (0 to 255).
+  /// @returns [int]
+  int readUint8() {
+    doReadAssertions(1);
+    return buffer.asByteData().getUint8(readIndex++);
+  }
+
+  /// Writes an unsigned byte (0 to 255).
+  /// @param [int] v
+  void writeUint8(int v) {
+    writeIndex++;
+    binary.add(v & 0xff);
+  }
+
   /// Reads a boolean (true or false).
   /// @returns [bool]
   bool readBoolean() {
     doReadAssertions(1);
-    return readByte() == 1;
+    return readUint8() == 1;
   }
 
   /// Writes a boolean (true or false).
   /// @param [bool] v
   void writeBoolean(bool v) {
-    writeByte(v ? 1 : 0);
+    writeUint8(v ? 1 : 0);
   }
 
   /// Reads a 16 bit (2 bytes) signed big-endian number.
   /// @returns [int]
-  int readShort() {
+  int readInt16() {
     doReadAssertions(2);
     return buffer.asByteData().getInt16(addOffset(2));
   }
 
   /// Writes a 16 bit (2 bytes) signed big-endian number.
   /// @param [int] v
-  void writeShort(int v) {
+  void writeInt16(int v) {
     doWriteAssertions(v, -32768, 32767);
-    writeByte(v >> 8);
-    writeByte(v);
+    writeInt8(v >> 8);
+    writeInt8(v);
   }
 
   /// Reads a 16 bit (2 bytes) signed little-endian number.
   /// @returns [int]
-  int readShortLE() {
+  int readInt16LE() {
     doReadAssertions(2);
     return buffer.asByteData().getInt16(addOffset(2), Endian.little);
   }
 
   /// Writes a 16 bit (2 bytes) signed little-endian number.
   /// @param [int] v
-  void writeShortLE(int v) {
+  void writeInt16LE(int v) {
     doWriteAssertions(v, -32768, 32767);
-    writeByte(v);
-    writeByte(v >> 8);
+    writeInt8(v);
+    writeInt8(v >> 8);
   }
 
   /// Reads a 16 bit (2 bytes) unsigned big-endian number.
   /// @returns [int]
-  int readUnsignedShort() {
+  int readUint16() {
     doReadAssertions(2);
     return buffer.asByteData().getUint16(addOffset(2));
   }
 
   /// Writes a 16 bit (2 bytes) unsigned big-endian number.
   /// @param [int] v
-  void writeUnsignedShort(int v) {
+  void writeUint16(int v) {
     doWriteAssertions(v, 0, 65535);
-    writeByte(v >>> 8);
-    writeByte(v);
+    writeUint8(v >>> 8);
+    writeUint8(v);
   }
 
   /// Reads a 16 bit (2 bytes) unsigned little-endian number.
   /// @returns [int]
-  int readUnsignedShortLE() {
+  int readUint16LE() {
     doReadAssertions(2);
     return buffer.asByteData().getUint16(addOffset(2), Endian.little);
   }
 
   /// Writes a 16 bit (2 bytes) unsigned little-endian number.
   /// @param [int] v
-  void writeUnsignedShortLE(int v) {
+  void writeUint16LE(int v) {
     doWriteAssertions(v, 0, 65535);
-    writeByte(v);
-    writeByte(v >>> 8);
+    writeUint8(v);
+    writeUint8(v >>> 8);
   }
 
   /// Reads a 24 bit (3 bytes) signed big-endian number.
   /// @returns [int]
-  int readTriad() {
+  int readInt24() {
     doReadAssertions(3);
-
     final bytes = Uint8List.fromList([
-      readByte(),
-      readByte(),
-      readByte(),
+      readInt8(),
+      readInt8(),
+      readInt8(),
     ]);
-
     return bytes[0] << 16 | bytes[1] << 8 | bytes[2];
   }
 
   /// Writes a 24 bit (3 bytes) signed big-endian number.
   /// @param [int] v
-  void writeTriad(int v) {
+  void writeInt24(int v) {
     doWriteAssertions(v, -8388608, 8388607);
-    writeByte((v & 0xff0000) >> 16); // msb
-    writeByte((v & 0x00ff00) >> 8); // mib
-    writeByte(v & 0x0000ff); // lsb
+    writeInt8((v & 0xff0000) >> 16); // msb
+    writeInt8((v & 0x00ff00) >> 8); // mib
+    writeInt8(v & 0x0000ff); // lsb
   }
 
-  /// Reads a 24 bit (3 bytes) little-endian number.
+  /// Reads a 24 bit (3 bytes) signed little-endian number.
   /// @returns [int]
-  int readTriadLE() {
+  int readInt24LE() {
     doReadAssertions(3);
-
     final bytes = Uint8List.fromList([
-      readByte(),
-      readByte(),
-      readByte(),
+      readInt8(),
+      readInt8(),
+      readInt8(),
     ]);
-
     return bytes[2] << 16 | bytes[1] << 8 | bytes[0];
   }
 
   /// Writes a 24 bit (3 bytes) signed little-endian number.
   /// @param [int] v
-  void writeTriadLE(int v) {
+  void writeInt24LE(int v) {
     doWriteAssertions(v, -8388608, 8388607);
-    writeByte(v & 0x0000ff);
-    writeByte((v & 0x00ff00) >> 8);
-    writeByte((v & 0xff0000) >> 16);
+    writeInt8(v & 0x0000ff);
+    writeInt8((v & 0x00ff00) >> 8);
+    writeInt8((v & 0xff0000) >> 16);
   }
 
   /// Reads a 24 bit (3 bytes) unsigned big-endian number.
   /// @returns [int]
-  int readUnsignedTriad() {
+  int readUint24() {
     doReadAssertions(3);
-
     final bytes = Uint8List.fromList([
-      readByte(),
-      readByte(),
-      readByte(),
+      readUint8(),
+      readUint8(),
+      readUint8(),
     ]);
-
     return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16);
   }
 
   /// Writes a 24 bit (3 bytes) unsigned big-endian number.
   /// @param [int] v
-  void writeUnsignedTriad(int v) {
+  void writeUint24(int v) {
     doWriteAssertions(v, 0, 16777215);
-    writeByte((v & 0xff0000) >>> 16); // msb
-    writeByte((v & 0x00ff00) >>> 8); // mib
-    writeByte(v & 0x0000ff); // lsb
+    writeUint8((v & 0xff0000) >>> 16); // msb
+    writeUint8((v & 0x00ff00) >>> 8); // mib
+    writeUint8(v & 0x0000ff); // lsb
   }
 
   /// Reads a 24 bit (3 bytes) unsigned little-endian number.
   /// @returns [int]
-  int readUnsignedTriadLE() {
+  int readUint24LE() {
     doReadAssertions(3);
 
     final bytes = Uint8List.fromList([
-      readByte(),
-      readByte(),
-      readByte(),
+      readUint8(),
+      readUint8(),
+      readUint8(),
     ]);
 
     return bytes[2] | (bytes[1] << 8) | (bytes[0] << 16);
@@ -231,99 +225,99 @@ class BinaryStream {
 
   /// Writes a 24 bit (3 bytes) unsigned little-endian number.
   /// @param [int] v
-  void writeUnsignedTriadLE(int v) {
+  void writeUint24LE(int v) {
     doWriteAssertions(v, 0, 16777215);
-    writeByte(v & 0x0000ff);
-    writeByte((v & 0x00ff00) >>> 8);
-    writeByte((v & 0xff0000) >>> 16);
+    writeUint8(v & 0x0000ff);
+    writeUint8((v & 0x00ff00) >>> 8);
+    writeUint8((v & 0xff0000) >>> 16);
   }
 
   /// Reads a 32 bit (4 bytes) big-endian signed number.
   /// @returns [int]
-  int readInt() {
+  int readInt32() {
     doReadAssertions(4);
     return buffer.asByteData().getInt32(addOffset(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian signed number.
   /// @param [int] v
-  void writeInt(int v) {
+  void writeInt32(int v) {
     var v2 = v;
     if (v2 < 0) {
       v2 = v2 & (0xffffffff + v2 + 1);
     }
     doWriteAssertions(v2, -2147483648, 2147483647);
-    writeByte(v2 >> 24);
-    writeByte(v2 >> 16);
-    writeByte(v2 >> 8);
-    writeByte(v2);
+    writeInt8(v2 >> 24);
+    writeInt8(v2 >> 16);
+    writeInt8(v2 >> 8);
+    writeInt8(v2);
   }
 
   /// Reads a 32 bit (4 bytes) little-endian signed number.
   /// @returns [int]
-  int readIntLE() {
+  int readInt32LE() {
     doReadAssertions(4);
     return buffer.asByteData().getInt32(addOffset(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian signed number.
   /// @param [int] v
-  void writeIntLE(int v) {
+  void writeInt32LE(int v) {
     var v2 = v;
     if (v2 < 0) {
       v2 = v2 & (0xffffffff + v2 + 1);
     }
     doWriteAssertions(v2, -2147483648, 2147483647);
-    writeByte(v2);
-    writeByte(v2 >> 8);
-    writeByte(v2 >> 16);
-    writeByte(v2 >> 24);
+    writeInt8(v2);
+    writeInt8(v2 >> 8);
+    writeInt8(v2 >> 16);
+    writeInt8(v2 >> 24);
   }
 
   /// Reads a 32 bit (4 bytes) big-endian unsigned number.
   /// @returns [int]
-  int readUnsignedInt() {
+  int readUint32() {
     doReadAssertions(4);
     return buffer.asByteData().getUint32(addOffset(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian unsigned number.
   /// @param [int] v
-  void writeUnsignedInt(int v) {
+  void writeUint32(int v) {
     doWriteAssertions(v, 0, 4294967295);
-    writeByte(v >>> 24);
-    writeByte(v >>> 16);
-    writeByte(v >>> 8);
-    writeByte(v);
+    writeUint8(v >>> 24);
+    writeUint8(v >>> 16);
+    writeUint8(v >>> 8);
+    writeUint8(v);
   }
 
   /// Reads a 32 bit (4 bytes) little-endian unsigned number.
   /// @returns [int]
-  int readUnsignedIntLE() {
+  int readUint32LE() {
     doReadAssertions(4);
     return buffer.asByteData().getUint32(addOffset(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian unsigned number.
   /// @param [int] v
-  void writeUnsignedIntLE(int v) {
+  void writeUint32LE(int v) {
     doWriteAssertions(v, 0, 4294967295);
-    writeByte(v);
-    writeByte(v >>> 8);
-    writeByte(v >>> 16);
-    writeByte(v >>> 24);
+    writeUint8(v);
+    writeUint8(v >>> 8);
+    writeUint8(v >>> 16);
+    writeUint8(v >>> 24);
   }
 
   /// Returns a 32 bit (4 bytes) big-endian flating point number.
   /// @returns [int]
-  double readFloat() {
+  double readFloat32() {
     doReadAssertions(4);
     return buffer.asByteData().getFloat32(addOffset(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian floating point number.
   /// @param [int] v
-  void writeFloat(double v) {
+  void writeFloat32(double v) {
     doWriteAssertions(
       v,
       -3.4028234663852886e38,
@@ -337,14 +331,14 @@ class BinaryStream {
 
   /// Returns a 32 bit (4 bytes) little-endian flating point number.
   /// @returns [int]
-  double readFloatLE() {
+  double readFloat32LE() {
     doReadAssertions(4);
     return buffer.asByteData().getFloat32(addOffset(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian floating point number.
   /// @param [int] v
-  void writeFloatLE(double v) {
+  void writeFloat32LE(double v) {
     doWriteAssertions(
       v,
       -3.4028234663852886e38,
@@ -358,14 +352,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) big-endian flating point number.
   /// @returns [int]
-  double readDouble() {
+  double readFloat64() {
     doReadAssertions(8);
     return buffer.asByteData().getFloat64(addOffset(8));
   }
 
   /// Writes a 64 bit (8 bytes) big-endian floating point number.
   /// @param [int] v
-  void writeDouble(double v) {
+  void writeFloat64(double v) {
     doWriteAssertions(
       v,
       -1.7976931348623157e308,
@@ -379,14 +373,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) little-endian flating point number.
   /// @returns [int]
-  double readDoubleLE() {
+  double readFloat64LE() {
     doReadAssertions(8);
     return buffer.asByteData().getFloat64(addOffset(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) little-endian floating point number.
   /// @param [int] v
-  void writeDoubleLE(double v) {
+  void writeFloat64LE(double v) {
     doWriteAssertions(
       v,
       -1.7976931348623157e308,
@@ -400,14 +394,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) signed big-endian number.
   /// @returns [int]
-  int readLong() {
+  int readInt64() {
     doReadAssertions(8);
     return buffer.asByteData().getInt64(addOffset(8));
   }
 
   /// Writes a 64 bit (8 bytes) signed big-endian number.
   /// @param [int] v
-  void writeLong(int v) {
+  void writeInt64(int v) {
     final byteData = ByteData(8);
     byteData.setInt64(0, v);
     write(byteData.buffer);
@@ -415,14 +409,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) signed little-endian number.
   /// @returns [int]
-  int readLongLE() {
+  int readInt64LE() {
     doReadAssertions(8);
     return buffer.asByteData().getInt64(addOffset(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) signed little-endian number.
   /// @param [int] v
-  void writeLongLE(int v) {
+  void writeInt64LE(int v) {
     final byteData = ByteData(8);
     byteData.setInt64(0, v, Endian.little);
     write(byteData.buffer);
@@ -430,14 +424,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) unsigned big-endian number.
   /// @returns [int]
-  int readUnsignedLong() {
+  int readUint64() {
     doReadAssertions(8);
     return buffer.asByteData().getUint64(addOffset(8));
   }
 
   /// Writes a 64 bit (8 bytes) unsigned big-endian number.
   /// @param [int] v
-  void writeUnsignedLong(int v) {
+  void writeUint64(int v) {
     final byteData = ByteData(8);
     byteData.setUint64(0, v);
     write(byteData.buffer);
@@ -445,14 +439,14 @@ class BinaryStream {
 
   /// Returns a 64 bit (8 bytes) unsigned little-endian number.
   /// @returns [int]
-  int readUnsignedLongLE() {
+  int readUint64LE() {
     doReadAssertions(8);
     return buffer.asByteData().getUint64(addOffset(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) unsigned little-endian number.
   /// @param [int] v
-  void writeUnsignedLongLE(int v) {
+  void writeUint64LE(int v) {
     final byteData = ByteData(8);
     byteData.setUint64(0, v, Endian.little);
     write(byteData.buffer);
@@ -460,29 +454,29 @@ class BinaryStream {
 
   /// Reads a 32 bit (4 bytes) zigzag-encoded number.
   /// @returns [int]
-  int readVarInt() {
-    final raw = readUnsignedVarInt();
+  int readVarInt32() {
+    final raw = readVarUint32();
     final temp = (((raw << 63) >> 63) ^ raw) >> 1;
     return temp ^ (raw & (1 << 63));
   }
 
   /// Writes a 32 bit (4 bytes) zigzag-encoded number.
   /// @param [int] v
-  void writeVarInt(int v) {
+  void writeVarInt32(int v) {
     var v2 = v;
     v2 = (v2 << 32) >> 32;
-    return writeUnsignedVarInt((v2 << 1) ^ (v2 >> 31));
+    return writeVarUint32((v2 << 1) ^ (v2 >> 31));
   }
 
   /// Reads a 32 bit unsigned number.
   /// @returns [int]
-  int readUnsignedVarInt() {
+  int readVarUint32() {
     var value = 0;
     for (var i = 0; i <= 28; i += 7) {
       if (buffer.asUint8List().elementAtOrNull(readIndex) == null) {
         throw Exception('No bytes left in buffer int');
       }
-      final b = readByte();
+      final b = readUint8();
       value |= (b & 0x7f) << i;
 
       if ((b & 0x80) == 0) {
@@ -495,37 +489,37 @@ class BinaryStream {
 
   /// Writes a 32 bit unsigned number with variable-length.
   /// @param [int] v
-  void writeUnsignedVarInt(int v) {
+  void writeVarUint32(int v) {
     var v2 = v;
     while ((v2 & 0xffffff80) != 0) {
-      writeByte((v2 & 0x7f) | 0x80);
+      writeUint8((v2 & 0x7f) | 0x80);
       v2 >>>= 7;
     }
-    writeByte(v2 & 0x7f);
+    writeUint8(v2 & 0x7f);
   }
 
   /// Reads a 64 bit zigzag-encoded variable-length number.
   /// @returns [int]
-  int readVarLong() {
-    final raw = readUnsignedVarLong();
+  int readVarInt64ZE() {
+    final raw = readVarUint64();
     return raw >> 1;
   }
 
   /// Writes a 64 bit unsigned zigzag-encoded number.
   /// @param [int] v
-  void writeVarLong(int v) {
-    return writeUnsignedVarLong((v << 1) ^ (v >> 63));
+  void writeVarInt64ZE(int v) {
+    return writeVarUint64((v << 1) ^ (v >> 63));
   }
 
   /// Reads a 64 bit unsigned variable-length number.
   /// @returns [int]
-  int readUnsignedVarLong() {
+  int readVarUint64() {
     var value = 0;
     for (var i = 0; i <= 63; i += 7) {
       if (feof()) {
         throw Exception('No bytes left in buffer long');
       }
-      final b = readByte();
+      final b = readUint8();
       value |= (b & 0x7f) << i;
 
       if ((b & 0x80) == 0) {
@@ -538,13 +532,13 @@ class BinaryStream {
 
   /// Writes a 64 bit unsigned variable-length number.
   /// @param [int] v
-  void writeUnsignedVarLong(int v) {
+  void writeVarUint64(int v) {
     var v2 = v;
     for (var i = 0; i < 10; ++i) {
       if (v2 >> 7 != 0) {
-        writeByte(v2 | 0x80);
+        writeUint8(v2 | 0x80);
       } else {
-        writeByte(v2 & 0x7f);
+        writeUint8(v2 & 0x7f);
         break;
       }
       v2 >>= 7;
@@ -554,7 +548,7 @@ class BinaryStream {
   /// Reads a utf-8 string.
   /// @returns [String]
   String readString() {
-    final length = readUnsignedVarInt();
+    final length = readVarUint32();
     return utf8Codec.decode(read(length).asUint8List());
   }
 
@@ -562,14 +556,14 @@ class BinaryStream {
   /// @param [String] v
   void writeString(String v) {
     final buffer = Uint8List.fromList(utf8Codec.encode(v)).buffer;
-    writeUnsignedVarInt(buffer.lengthInBytes);
+    writeVarUint32(buffer.lengthInBytes);
     write(buffer);
   }
 
   /// Reads a ascii string.
   /// @returns [String]
   String readLELengthASCIIString() {
-    final strLen = readUnsignedIntLE();
+    final strLen = readUint32LE();
     final str = ascii8Codec.decode(read(strLen).asUint8List());
     return str;
   }
@@ -578,22 +572,22 @@ class BinaryStream {
   /// @param [String] v
   void writeLELengthASCIIString(String v) {
     final buffer = Uint8List.fromList(ascii8Codec.encode(v)).buffer;
-    writeUnsignedIntLE(buffer.lengthInBytes);
+    writeUint32LE(buffer.lengthInBytes);
     write(buffer);
   }
 
   /// Reads [Vector3].
   /// @returns [Vector3]
   Vector3 readVector3() {
-    return Vector3(readFloatLE(), readFloatLE(), readFloatLE());
+    return Vector3(readFloat32LE(), readFloat32LE(), readFloat32LE());
   }
 
   /// Writes [Vector3].
   /// @param [Vector3] v
   void writeVector3(Vector3 v) {
-    writeFloatLE(v.x);
-    writeFloatLE(v.y);
-    writeFloatLE(v.z);
+    writeFloat32LE(v.x);
+    writeFloat32LE(v.y);
+    writeFloat32LE(v.z);
   }
 
   /// Increases the write offset by the given length.

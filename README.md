@@ -11,7 +11,7 @@ Binary Stream to transfer binary between a server and a client.
 
 ```yaml
 dependencies:
-  binary_stream: ^1.0.2
+  binary_stream: ^1.0.3
 ```
 
 ### Solving packages conflict
@@ -27,8 +27,8 @@ dependency_overrides:
 ```dart
 void main() {
   var binaryStream = BinaryStream();
-  binaryStream.writeInt(1);
+  binaryStream.writeInt32(1);
 
-  print('Int: ${binaryStream.readInt()}');
+  print('Int: ${binaryStream.readInt32()}');
 }
 ```
