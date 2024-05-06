@@ -13,3 +13,7 @@
 ## 1.0.3
 
 - Change name of functions.
+
+## 1.0.4
+
+- Add vector3 for var int.
