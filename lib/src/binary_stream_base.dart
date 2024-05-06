@@ -622,6 +622,48 @@ class BinaryStream {
     writeVarInt32(v.z.toInt());
   }
 
+  /// Reads [Vector2].
+  /// @returns [Vector2]
+  Vector2 readVector2() {
+    return Vector2(readFloat32(), readFloat32());
+  }
+
+  /// Writes [Vector2].
+  /// @param [Vector2] v
+  void writeVector2(Vector2 v) {
+    writeFloat32(v.x);
+    writeFloat32(v.y);
+  }
+
+  /// Reads [Vector2].
+  /// @returns [Vector2]
+  Vector2 readVector2LE() {
+    return Vector2(readFloat32LE(), readFloat32LE());
+  }
+
+  /// Writes [Vector2].
+  /// @param [Vector2] v
+  void writeVector2LE(Vector2 v) {
+    writeFloat32LE(v.x);
+    writeFloat32LE(v.y);
+  }
+
+  /// Reads [Vector2].
+  /// @returns [Vector2]
+  Vector2 readVector2VarInt32() {
+    return Vector2(
+      readVarInt32().toDouble(),
+      readVarInt32().toDouble(),
+    );
+  }
+
+  /// Writes [Vector2].
+  /// @param [Vector2] v
+  void writeVector2VarInt32(Vector2 v) {
+    writeVarInt32(v.x.toInt());
+    writeVarInt32(v.y.toInt());
+  }
+
   /// Increases the write offset by the given length.
   /// @param [int] len
   int addOffset(int len) {

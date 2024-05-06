@@ -17,3 +17,7 @@
 ## 1.0.4
 
 - Add vector3 for var int.
+
+## 1.0.5
+
+- Add vector2.
