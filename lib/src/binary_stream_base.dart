@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
+import 'package:uuid/uuid.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 class BinaryStream {
@@ -662,6 +663,37 @@ class BinaryStream {
   void writeVector2VarInt32(Vector2 v) {
     writeVarInt32(v.x.toInt());
     writeVarInt32(v.y.toInt());
+  }
+
+  /// Reads [Uuid].
+  /// @returns [Uuid]
+  String readUuid() {
+    var b = read(16).asUint8List();
+    final b1 = b.sublist(0, 8);
+    final b2 = b.sublist(8);
+    b = Uint8List.fromList([...b2, ...b1]);
+    final buf = Uint8List(16);
+    for (var i = 0; i < b.length / 2; i++) {
+      final j = b.length - 1 - i;
+      final t = b[i];
+      buf[i] = b[j];
+      buf[j] = t;
+    }
+    return Uuid.unparse(buf);
+  }
+
+  /// Writes [Uuid].
+  /// @param [String] v
+  void writeUuid(String v) {
+    final b = Uuid.parseAsByteList(v);
+    final buf = Uint8List(16);
+    for (var i = 0; i < b.length / 2; i++) {
+      final j = b.length - 1 - i;
+      final t = b[i];
+      buf[i] = b[j];
+      buf[j] = t;
+    }
+    write(buf.buffer);
   }
 
   /// Increases the write offset by the given length.
