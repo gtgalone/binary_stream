@@ -5,12 +5,17 @@ import 'package:uuid/uuid.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 class BinaryStream {
-  final utf8Codec = const Utf8Codec();
-  final ascii8Codec = const AsciiCodec();
+  /// Creates a new BinaryStream instance.
+  /// @param [ByteBuffer] buffer - The array or Buffer containing binary data.
+  /// @param [int] offset - The initial pointer position.
+  BinaryStream([ByteBuffer? buffer, int offset = 0]) {
+    readIndex = offset;
+    _buffer = buffer;
+  }
 
-  List<int> binary = [];
+  final List<int> binary = [];
 
-  late int readIndex;
+  int readIndex = 0;
   int writeIndex = 0;
 
   /// Returns the encoded buffer.
@@ -20,11 +25,7 @@ class BinaryStream {
     return _buffer ?? Uint8List.fromList(binary).buffer;
   }
 
-  /// Creates a new BinaryStream instance.
-  /// @param [ByteBuffer] buffer - The array or Buffer containing binary data.
-  /// @param [int] offset - The initial pointer position.
-  BinaryStream([ByteBuffer? buffer, int offset = 0]) {
-    readIndex = offset;
+  set buffer(ByteBuffer buffer) {
     _buffer = buffer;
   }
 
@@ -38,7 +39,7 @@ class BinaryStream {
   /// Appends a buffer to the main buffer.
   /// @param [ByteBuffer] buf
   void write(ByteBuffer buf) {
-    binary = [...binary, ...buf.asUint8List()];
+    binary.addAll(buf.asUint8List());
     writeIndex += buf.lengthInBytes;
   }
 
@@ -550,13 +551,13 @@ class BinaryStream {
   /// @returns [String]
   String readString() {
     final length = readVarUint32();
-    return utf8Codec.decode(read(length).asUint8List());
+    return _utf8Codec.decode(read(length).asUint8List());
   }
 
   /// Writes a utf-8 string.
   /// @param [String] v
   void writeString(String v) {
-    final buffer = Uint8List.fromList(utf8Codec.encode(v)).buffer;
+    final buffer = Uint8List.fromList(_utf8Codec.encode(v)).buffer;
     writeVarUint32(buffer.lengthInBytes);
     write(buffer);
   }
@@ -565,14 +566,14 @@ class BinaryStream {
   /// @returns [String]
   String readLELengthASCIIString() {
     final strLen = readUint32LE();
-    final str = ascii8Codec.decode(read(strLen).asUint8List());
+    final str = _ascii8Codec.decode(read(strLen).asUint8List());
     return str;
   }
 
   /// Writes a ascii string.
   /// @param [String] v
   void writeLELengthASCIIString(String v) {
-    final buffer = Uint8List.fromList(ascii8Codec.encode(v)).buffer;
+    final buffer = Uint8List.fromList(_ascii8Codec.encode(v)).buffer;
     writeUint32LE(buffer.lengthInBytes);
     write(buffer);
   }
@@ -742,4 +743,13 @@ class BinaryStream {
       'Value out of bounds: value=$v, min=$min, max=$max',
     );
   }
+
+  void clear() {
+    readIndex = 0;
+    writeIndex = 0;
+    _buffer = null;
+  }
 }
+
+final _utf8Codec = const Utf8Codec();
+final _ascii8Codec = const AsciiCodec();

@@ -25,3 +25,7 @@
 ## 1.0.6
 
 - Add uuid.
+
+## 1.0.7
+
+- Add set buffer and clear.
