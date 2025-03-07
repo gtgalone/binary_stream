@@ -748,6 +748,7 @@ class BinaryStream {
     readIndex = 0;
     writeIndex = 0;
     _buffer = null;
+    binary.clear();
   }
 }
 

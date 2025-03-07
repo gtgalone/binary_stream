@@ -29,3 +29,7 @@
 ## 1.0.7
 
 - Add set buffer and clear.
+
+## 1.0.8
+
+- Add clear binary to clear.
