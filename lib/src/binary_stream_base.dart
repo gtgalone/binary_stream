@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math.dart';
 
 class BinaryStream {
   /// Creates a new BinaryStream instance.

@@ -11,7 +11,7 @@ Binary Stream to transfer binary between a server and a client.
 
 ```yaml
 dependencies:
-  binary_stream: ^1.0.8
+  binary_stream: ^1.0.9
 ```
 
 ### Solving packages conflict
