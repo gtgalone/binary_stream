@@ -1,3 +1,7 @@
+## 1.0.15
+
+- Improve performance.
+
 ## 1.0.9
 
 - Change vector_math_64 to vector_math.

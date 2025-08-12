@@ -1,53 +1,50 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
 import 'package:vector_math/vector_math.dart';
 
 class BinaryStream {
   /// Creates a new BinaryStream instance.
-  /// @param [ByteBuffer] buffer - The array or Buffer containing binary data.
-  /// @param [int] offset - The initial pointer position.
-  BinaryStream([ByteBuffer? buffer, int offset = 0]) {
-    readIndex = offset;
-    _buffer = buffer;
+  BinaryStream({List<int>? bytes}) {
+    if (bytes != null) {
+      binary.addAll(bytes);
+    }
   }
 
-  final List<int> binary = [];
+  List<int> binary = [];
 
   int readIndex = 0;
   int writeIndex = 0;
 
+  /// Returns the encoded byte.
+  /// @returns [ByteData]
+  ByteData? _byteData;
+  ByteData get byteData => _byteData ?? buffer.asByteData();
+
   /// Returns the encoded buffer.
   /// @returns [ByteBuffer]
-  ByteBuffer? _buffer;
-  ByteBuffer get buffer {
-    return _buffer ?? Uint8List.fromList(binary).buffer;
-  }
+  ByteBuffer get buffer => Uint8List.fromList(binary).buffer;
 
-  set buffer(ByteBuffer buffer) {
-    _buffer = buffer;
-  }
-
-  /// Reads a slice of buffer by the given length.
+  /// Reads a slice of bytes by the given length.
   /// @param [int] len
-  ByteBuffer read(int len) {
+  /// @returns [List]
+  List<int> read(int len) {
     doReadAssertions(len);
-    return buffer.asUint8List().sublist(readIndex, readIndex += len).buffer;
+    return binary.sublist(readIndex, readIndex += len);
   }
 
-  /// Appends a buffer to the main buffer.
-  /// @param [ByteBuffer] buf
-  void write(ByteBuffer buf) {
-    binary.addAll(buf.asUint8List());
-    writeIndex += buf.lengthInBytes;
+  /// Appends bytes to the main bytes.
+  /// @param [List] bytes
+  void write(List<int> bytes) {
+    binary.addAll(bytes);
+    addOffsetWrite(bytes.length);
   }
 
   /// Reads a signed byte (-128 to 127).
   /// @returns [int]
   int readInt8() {
     doReadAssertions(1);
-    return buffer.asByteData().getInt8(readIndex++);
+    return byteData.getInt8(readIndex++);
   }
 
   /// Writes a signed byte (-128 to 127).
@@ -57,22 +54,20 @@ class BinaryStream {
     if (v2 < 0) {
       v2 = 0xff + v2 + 1;
     }
-    writeIndex++;
-    binary.add(v2 & 0xff);
+    write([v2 & 0xff]);
   }
 
   /// Reads an unsigned byte (0 to 255).
   /// @returns [int]
   int readUint8() {
     doReadAssertions(1);
-    return buffer.asByteData().getUint8(readIndex++);
+    return byteData.getUint8(readIndex++);
   }
 
   /// Writes an unsigned byte (0 to 255).
   /// @param [int] v
   void writeUint8(int v) {
-    writeIndex++;
-    binary.add(v & 0xff);
+    write([v & 0xff]);
   }
 
   /// Reads a boolean (true or false).
@@ -92,7 +87,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt16() {
     doReadAssertions(2);
-    return buffer.asByteData().getInt16(addOffset(2));
+    return byteData.getInt16(addOffsetRead(2));
   }
 
   /// Writes a 16 bit (2 bytes) signed big-endian number.
@@ -107,7 +102,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt16LE() {
     doReadAssertions(2);
-    return buffer.asByteData().getInt16(addOffset(2), Endian.little);
+    return byteData.getInt16(addOffsetRead(2), Endian.little);
   }
 
   /// Writes a 16 bit (2 bytes) signed little-endian number.
@@ -122,7 +117,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint16() {
     doReadAssertions(2);
-    return buffer.asByteData().getUint16(addOffset(2));
+    return byteData.getUint16(addOffsetRead(2));
   }
 
   /// Writes a 16 bit (2 bytes) unsigned big-endian number.
@@ -137,7 +132,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint16LE() {
     doReadAssertions(2);
-    return buffer.asByteData().getUint16(addOffset(2), Endian.little);
+    return byteData.getUint16(addOffsetRead(2), Endian.little);
   }
 
   /// Writes a 16 bit (2 bytes) unsigned little-endian number.
@@ -152,11 +147,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt24() {
     doReadAssertions(3);
-    final bytes = Uint8List.fromList([
-      readInt8(),
-      readInt8(),
-      readInt8(),
-    ]);
+    final bytes = Uint8List.fromList([readInt8(), readInt8(), readInt8()]);
     return bytes[0] << 16 | bytes[1] << 8 | bytes[2];
   }
 
@@ -173,11 +164,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt24LE() {
     doReadAssertions(3);
-    final bytes = Uint8List.fromList([
-      readInt8(),
-      readInt8(),
-      readInt8(),
-    ]);
+    final bytes = Uint8List.fromList([readInt8(), readInt8(), readInt8()]);
     return bytes[2] << 16 | bytes[1] << 8 | bytes[0];
   }
 
@@ -194,11 +181,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint24() {
     doReadAssertions(3);
-    final bytes = Uint8List.fromList([
-      readUint8(),
-      readUint8(),
-      readUint8(),
-    ]);
+    final bytes = Uint8List.fromList([readUint8(), readUint8(), readUint8()]);
     return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16);
   }
 
@@ -215,13 +198,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint24LE() {
     doReadAssertions(3);
-
-    final bytes = Uint8List.fromList([
-      readUint8(),
-      readUint8(),
-      readUint8(),
-    ]);
-
+    final bytes = Uint8List.fromList([readUint8(), readUint8(), readUint8()]);
     return bytes[2] | (bytes[1] << 8) | (bytes[0] << 16);
   }
 
@@ -238,7 +215,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt32() {
     doReadAssertions(4);
-    return buffer.asByteData().getInt32(addOffset(4));
+    return byteData.getInt32(addOffsetRead(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian signed number.
@@ -259,7 +236,7 @@ class BinaryStream {
   /// @returns [int]
   int readInt32LE() {
     doReadAssertions(4);
-    return buffer.asByteData().getInt32(addOffset(4), Endian.little);
+    return byteData.getInt32(addOffsetRead(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian signed number.
@@ -280,7 +257,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint32() {
     doReadAssertions(4);
-    return buffer.asByteData().getUint32(addOffset(4));
+    return byteData.getUint32(addOffsetRead(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian unsigned number.
@@ -297,7 +274,7 @@ class BinaryStream {
   /// @returns [int]
   int readUint32LE() {
     doReadAssertions(4);
-    return buffer.asByteData().getUint32(addOffset(4), Endian.little);
+    return byteData.getUint32(addOffsetRead(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian unsigned number.
@@ -314,144 +291,132 @@ class BinaryStream {
   /// @returns [int]
   double readFloat32() {
     doReadAssertions(4);
-    return buffer.asByteData().getFloat32(addOffset(4));
+    return byteData.getFloat32(addOffsetRead(4));
   }
 
   /// Writes a 32 bit (4 bytes) big-endian floating point number.
   /// @param [int] v
   void writeFloat32(double v) {
-    doWriteAssertions(
-      v,
-      -3.4028234663852886e38,
-      3.4028234663852886e38,
-    );
-
-    final byteData = ByteData(4);
-    byteData.setFloat32(0, v);
-    write(byteData.buffer);
+    doWriteAssertions(v, -3.4028234663852886e38, 3.4028234663852886e38);
+    final b = ByteData(4);
+    b.setFloat32(0, v);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(4);
   }
 
   /// Returns a 32 bit (4 bytes) little-endian flating point number.
   /// @returns [int]
   double readFloat32LE() {
     doReadAssertions(4);
-    return buffer.asByteData().getFloat32(addOffset(4), Endian.little);
+    return byteData.getFloat32(addOffsetRead(4), Endian.little);
   }
 
   /// Writes a 32 bit (4 bytes) little-endian floating point number.
   /// @param [int] v
   void writeFloat32LE(double v) {
-    doWriteAssertions(
-      v,
-      -3.4028234663852886e38,
-      3.4028234663852886e38,
-    );
-
-    final byteData = ByteData(4);
-    byteData.setFloat32(0, v, Endian.little);
-    write(byteData.buffer);
+    doWriteAssertions(v, -3.4028234663852886e38, 3.4028234663852886e38);
+    final b = ByteData(4);
+    b.setFloat32(0, v, Endian.little);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(4);
   }
 
   /// Returns a 64 bit (8 bytes) big-endian flating point number.
   /// @returns [int]
   double readFloat64() {
     doReadAssertions(8);
-    return buffer.asByteData().getFloat64(addOffset(8));
+    return byteData.getFloat64(addOffsetRead(8));
   }
 
   /// Writes a 64 bit (8 bytes) big-endian floating point number.
   /// @param [int] v
   void writeFloat64(double v) {
-    doWriteAssertions(
-      v,
-      -1.7976931348623157e308,
-      1.7976931348623157e308,
-    );
-
-    final byteData = ByteData(8);
-    byteData.setFloat64(0, v);
-    write(byteData.buffer);
+    doWriteAssertions(v, -1.7976931348623157e308, 1.7976931348623157e308);
+    final b = ByteData(8);
+    b.setFloat32(0, v);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Returns a 64 bit (8 bytes) little-endian flating point number.
   /// @returns [int]
   double readFloat64LE() {
     doReadAssertions(8);
-    return buffer.asByteData().getFloat64(addOffset(8), Endian.little);
+    return byteData.getFloat64(addOffsetRead(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) little-endian floating point number.
   /// @param [int] v
   void writeFloat64LE(double v) {
-    doWriteAssertions(
-      v,
-      -1.7976931348623157e308,
-      1.7976931348623157e308,
-    );
-
-    final byteData = ByteData(8);
-    byteData.setFloat64(0, v, Endian.little);
-    write(byteData.buffer);
+    doWriteAssertions(v, -1.7976931348623157e308, 1.7976931348623157e308);
+    final b = ByteData(8);
+    b.setFloat32(0, v, Endian.little);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Returns a 64 bit (8 bytes) signed big-endian number.
   /// @returns [int]
   int readInt64() {
     doReadAssertions(8);
-    return buffer.asByteData().getInt64(addOffset(8));
+    return byteData.getInt64(addOffsetRead(8));
   }
 
   /// Writes a 64 bit (8 bytes) signed big-endian number.
   /// @param [int] v
   void writeInt64(int v) {
-    final byteData = ByteData(8);
-    byteData.setInt64(0, v);
-    write(byteData.buffer);
+    final b = ByteData(8);
+    b.setInt64(0, v);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Returns a 64 bit (8 bytes) signed little-endian number.
   /// @returns [int]
   int readInt64LE() {
     doReadAssertions(8);
-    return buffer.asByteData().getInt64(addOffset(8), Endian.little);
+    return byteData.getInt64(addOffsetRead(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) signed little-endian number.
   /// @param [int] v
   void writeInt64LE(int v) {
-    final byteData = ByteData(8);
-    byteData.setInt64(0, v, Endian.little);
-    write(byteData.buffer);
+    final b = ByteData(8);
+    b.setInt64(0, v, Endian.little);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Returns a 64 bit (8 bytes) unsigned big-endian number.
   /// @returns [int]
   int readUint64() {
     doReadAssertions(8);
-    return buffer.asByteData().getUint64(addOffset(8));
+    return byteData.getUint64(addOffsetRead(8));
   }
 
   /// Writes a 64 bit (8 bytes) unsigned big-endian number.
   /// @param [int] v
   void writeUint64(int v) {
-    final byteData = ByteData(8);
-    byteData.setUint64(0, v);
-    write(byteData.buffer);
+    final b = ByteData(8);
+    b.setUint64(0, v);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Returns a 64 bit (8 bytes) unsigned little-endian number.
   /// @returns [int]
   int readUint64LE() {
     doReadAssertions(8);
-    return buffer.asByteData().getUint64(addOffset(8), Endian.little);
+    return byteData.getUint64(addOffsetRead(8), Endian.little);
   }
 
   /// Writes a 64 bit (8 bytes) unsigned little-endian number.
   /// @param [int] v
   void writeUint64LE(int v) {
-    final byteData = ByteData(8);
-    byteData.setUint64(0, v, Endian.little);
-    write(byteData.buffer);
+    final b = ByteData(8);
+    b.setUint64(0, v, Endian.little);
+    binary.addAll(b.buffer.asUint8List());
+    addOffsetWrite(8);
   }
 
   /// Reads a 32 bit (4 bytes) zigzag-encoded number.
@@ -475,17 +440,15 @@ class BinaryStream {
   int readVarUint32() {
     var value = 0;
     for (var i = 0; i <= 28; i += 7) {
-      if (buffer.asUint8List().elementAtOrNull(readIndex) == null) {
+      if (feof()) {
         throw Exception('No bytes left in buffer int');
       }
       final b = readUint8();
       value |= (b & 0x7f) << i;
-
       if ((b & 0x80) == 0) {
         return value;
       }
     }
-
     throw Exception('VarInt did not terminate after 5 bytes!');
   }
 
@@ -523,12 +486,10 @@ class BinaryStream {
       }
       final b = readUint8();
       value |= (b & 0x7f) << i;
-
       if ((b & 0x80) == 0) {
         return value;
       }
     }
-
     throw Exception('VarLong did not terminate after 10 bytes!');
   }
 
@@ -551,31 +512,31 @@ class BinaryStream {
   /// @returns [String]
   String readString() {
     final length = readVarUint32();
-    return _utf8Codec.decode(read(length).asUint8List());
+    return _utf8Codec.decode(read(length));
   }
 
   /// Writes a utf-8 string.
   /// @param [String] v
   void writeString(String v) {
-    final buffer = Uint8List.fromList(_utf8Codec.encode(v)).buffer;
-    writeVarUint32(buffer.lengthInBytes);
-    write(buffer);
+    final bytes = Uint8List.fromList(_utf8Codec.encode(v));
+    writeVarUint32(bytes.lengthInBytes);
+    write(bytes);
   }
 
   /// Reads a ascii string.
   /// @returns [String]
   String readLELengthASCIIString() {
     final strLen = readUint32LE();
-    final str = _ascii8Codec.decode(read(strLen).asUint8List());
+    final str = _ascii8Codec.decode(read(strLen));
     return str;
   }
 
   /// Writes a ascii string.
   /// @param [String] v
   void writeLELengthASCIIString(String v) {
-    final buffer = Uint8List.fromList(_ascii8Codec.encode(v)).buffer;
-    writeUint32LE(buffer.lengthInBytes);
-    write(buffer);
+    final bytes = Uint8List.fromList(_ascii8Codec.encode(v));
+    writeUint32LE(bytes.lengthInBytes);
+    write(bytes);
   }
 
   /// Reads [Vector3].
@@ -653,10 +614,7 @@ class BinaryStream {
   /// Reads [Vector2].
   /// @returns [Vector2]
   Vector2 readVector2VarInt32() {
-    return Vector2(
-      readVarInt32().toDouble(),
-      readVarInt32().toDouble(),
-    );
+    return Vector2(readVarInt32().toDouble(), readVarInt32().toDouble());
   }
 
   /// Writes [Vector2].
@@ -669,7 +627,7 @@ class BinaryStream {
   /// Reads [Uuid].
   /// @returns [Uuid]
   String readUuid() {
-    var b = read(16).asUint8List();
+    var b = read(16);
     final b1 = b.sublist(0, 8);
     final b2 = b.sublist(8);
     b = Uint8List.fromList([...b2, ...b1]);
@@ -687,34 +645,40 @@ class BinaryStream {
   /// @param [String] v
   void writeUuid(String v) {
     final b = Uuid.parseAsByteList(v);
-    final buf = Uint8List(16);
+    final bytes = Uint8List(16);
     for (var i = 0; i < b.length / 2; i++) {
       final j = b.length - 1 - i;
       final t = b[i];
-      buf[i] = b[j];
-      buf[j] = t;
+      bytes[i] = b[j];
+      bytes[j] = t;
     }
-    write(buf.buffer);
+    write(bytes);
+  }
+
+  /// Increases the read offset by the given length.
+  /// @param [int] len
+  int addOffsetRead(int len) {
+    return (readIndex += len) - len;
   }
 
   /// Increases the write offset by the given length.
   /// @param [int] len
-  int addOffset(int len) {
-    return (readIndex += len) - len;
+  int addOffsetWrite(int len) {
+    return (writeIndex += len) - len;
   }
 
   /// Returns whatever or not the read offset is at end of line.
   /// @returns [int]
   bool feof() {
-    return buffer.asUint8List().elementAtOrNull(readIndex) == null;
+    return binary.length <= readIndex;
   }
 
   /// Reads the remaining bytes and returns the buffer slice.
-  /// @returns [ByteBuffer]
-  ByteBuffer readRemaining() {
-    final buf = buffer.asUint8List().sublist(readIndex).buffer;
-    readIndex = buffer.lengthInBytes;
-    return buf;
+  /// @returns [List]
+  List<int> readRemaining() {
+    final list = binary.sublist(readIndex);
+    readIndex = binary.length;
+    return list;
   }
 
   /// Skips len bytes on the buffer.
@@ -727,10 +691,7 @@ class BinaryStream {
   /// Do read assertions, check if the read buffer is null.
   /// @param [int] v
   void doReadAssertions(int v) {
-    assert(
-      buffer.lengthInBytes >= v,
-      'Cannot read without buffer data!',
-    );
+    assert(binary.length >= v, 'Cannot read without buffer data!');
   }
 
   /// Do read assertions, check if the read buffer is null.
@@ -744,11 +705,19 @@ class BinaryStream {
     );
   }
 
-  void clear() {
+  void resetOffset() {
     readIndex = 0;
     writeIndex = 0;
-    _buffer = null;
+    _byteData = null;
+  }
+
+  void clear() {
     binary.clear();
+    resetOffset();
+  }
+
+  BinaryStream clone() {
+    return BinaryStream(bytes: binary);
   }
 }
 
