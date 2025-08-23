@@ -510,32 +510,39 @@ class BinaryStream {
 
   /// Reads a utf-8 string.
   /// @returns [String]
-  String readString() {
-    final length = readVarUint32();
+  String readString({int Function()? funcLength}) {
+    final length = (funcLength != null) ? funcLength() : readVarUint32();
     return _utf8Codec.decode(read(length));
   }
 
   /// Writes a utf-8 string.
   /// @param [String] v
-  void writeString(String v) {
+  void writeString(String v, {void Function(int)? funcLength}) {
     final bytes = Uint8List.fromList(_utf8Codec.encode(v));
-    writeVarUint32(bytes.lengthInBytes);
+    if (funcLength != null) {
+      funcLength(bytes.lengthInBytes);
+    } else {
+      writeVarUint32(bytes.lengthInBytes);
+    }
     write(bytes);
   }
 
   /// Reads a ascii string.
   /// @returns [String]
-  String readLELengthASCIIString() {
-    final strLen = readUint32LE();
-    final str = _ascii8Codec.decode(read(strLen));
-    return str;
+  String readLELengthASCIIString({int Function()? funcLength}) {
+    final length = (funcLength != null) ? funcLength() : readUint32LE();
+    return _ascii8Codec.decode(read(length));
   }
 
   /// Writes a ascii string.
   /// @param [String] v
-  void writeLELengthASCIIString(String v) {
+  void writeLELengthASCIIString(String v, {void Function(int)? funcLength}) {
     final bytes = Uint8List.fromList(_ascii8Codec.encode(v));
-    writeUint32LE(bytes.lengthInBytes);
+    if (funcLength != null) {
+      funcLength(bytes.lengthInBytes);
+    } else {
+      writeUint32LE(bytes.lengthInBytes);
+    }
     write(bytes);
   }
 
@@ -553,13 +560,27 @@ class BinaryStream {
     writeFloat32(v.z);
   }
 
-  /// Reads [Vector3].
+  /// Reads [Vector3 Int].
+  /// @returns [(int, int, int)]
+  (int, int, int) readVector3Int() {
+    return (readInt32(), readInt32(), readInt32());
+  }
+
+  /// Writes [Vector3 Int].
+  /// @param [int x, int y, int z]
+  void writeVector3Int(int x, int y, int z) {
+    writeInt32(x);
+    writeInt32(y);
+    writeInt32(z);
+  }
+
+  /// Reads [Vector3] little-endian.
   /// @returns [Vector3]
   Vector3 readVector3LE() {
     return Vector3(readFloat32LE(), readFloat32LE(), readFloat32LE());
   }
 
-  /// Writes [Vector3].
+  /// Writes [Vector3] little-endian.
   /// @param [Vector3] v
   void writeVector3LE(Vector3 v) {
     writeFloat32LE(v.x);
@@ -567,22 +588,32 @@ class BinaryStream {
     writeFloat32LE(v.z);
   }
 
+  /// Reads [Vector3 Int] little-endian.
+  /// @returns [(int, int, int)]
+  (int, int, int) readVector3IntLE() {
+    return (readInt32LE(), readInt32LE(), readInt32LE());
+  }
+
+  /// Writes [Vector3 Int] little-endian.
+  /// @param [int x, int y, int z]
+  void writeVector3IntLE(int x, int y, int z) {
+    writeInt32LE(x);
+    writeInt32LE(y);
+    writeInt32LE(z);
+  }
+
   /// Reads [Vector3].
   /// @returns [Vector3]
-  Vector3 readVector3VarInt32() {
-    return Vector3(
-      readVarInt32().toDouble(),
-      readVarInt32().toDouble(),
-      readVarInt32().toDouble(),
-    );
+  (int, int, int) readVector3VarInt32() {
+    return (readVarInt32(), readVarInt32(), readVarInt32());
   }
 
   /// Writes [Vector3].
   /// @param [Vector3] v
-  void writeVector3VarInt32(Vector3 v) {
-    writeVarInt32(v.x.toInt());
-    writeVarInt32(v.y.toInt());
-    writeVarInt32(v.z.toInt());
+  void writeVector3VarInt32(int x, int y, int z) {
+    writeVarInt32(x);
+    writeVarInt32(y);
+    writeVarInt32(z);
   }
 
   /// Reads [Vector2].
@@ -598,30 +629,56 @@ class BinaryStream {
     writeFloat32(v.y);
   }
 
-  /// Reads [Vector2].
+  /// Reads [Vector2 Int].
+  /// @returns [(int, int, int)]
+  (int, int) readVector2Int() {
+    return (readInt32(), readInt32());
+  }
+
+  /// Writes [Vector2 Int].
+  /// @param [int x, int y]
+  void writeVector2Int(int x, int y) {
+    writeInt32(x);
+    writeInt32(y);
+  }
+
+  /// Reads [Vector2] little-endian.
   /// @returns [Vector2]
   Vector2 readVector2LE() {
     return Vector2(readFloat32LE(), readFloat32LE());
   }
 
-  /// Writes [Vector2].
+  /// Writes [Vector2] little-endian.
   /// @param [Vector2] v
   void writeVector2LE(Vector2 v) {
     writeFloat32LE(v.x);
     writeFloat32LE(v.y);
   }
 
-  /// Reads [Vector2].
-  /// @returns [Vector2]
-  Vector2 readVector2VarInt32() {
-    return Vector2(readVarInt32().toDouble(), readVarInt32().toDouble());
+  /// Reads [Vector2 Int] little-endian.
+  /// @returns [(int, int, int)]
+  (int, int) readVector2IntLE() {
+    return (readInt32LE(), readInt32LE());
   }
 
-  /// Writes [Vector2].
-  /// @param [Vector2] v
-  void writeVector2VarInt32(Vector2 v) {
-    writeVarInt32(v.x.toInt());
-    writeVarInt32(v.y.toInt());
+  /// Writes [Vector2 Int] little-endian.
+  /// @param [int x, int y]
+  void writeVector2IntLE(int x, int y) {
+    writeInt32LE(x);
+    writeInt32LE(y);
+  }
+
+  /// Reads [Vector2 VarInt32].
+  /// @returns [(int, int)]
+  (int, int) readVector2VarInt32() {
+    return (readVarInt32(), readVarInt32());
+  }
+
+  /// Writes [Vector2 VarInt32].
+  /// @param [int x, int y]
+  void writeVector2VarInt32(int x, int y) {
+    writeVarInt32(x);
+    writeVarInt32(y);
   }
 
   /// Reads [Uuid].

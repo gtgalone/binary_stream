@@ -1,3 +1,7 @@
+## 1.0.16
+
+- Add more options.
+
 ## 1.0.15
 
 - Improve performance.
